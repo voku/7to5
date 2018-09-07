@@ -18,6 +18,7 @@ class DirectoryConverter
     protected $extensions;
     /** @var null|string[] */
     protected $excludes;
+    /** @var OutputInterface */
     protected $logger;
 
     /**
@@ -47,7 +48,7 @@ class DirectoryConverter
 
     public function log($sourceItem, $target)
     {
-        if (is_null($this->logger)) {
+        if ($this->logger === null) {
             return;
         }
         $targetRealPath = realpath($target);
@@ -96,7 +97,7 @@ class DirectoryConverter
             throw InvalidParameter::directoryIsRequired();
         }
 
-        if($this->cleanDestinationDirectory){
+        if ($this->cleanDestinationDirectory) {
             $this->removeDirectory($destinationDirectory);
         }
 
@@ -110,32 +111,36 @@ class DirectoryConverter
     protected function copyDirectory($sourceDirectory, $destinationDirectory)
     {
         if (!is_dir($destinationDirectory)) {
-            mkdir($destinationDirectory);
+            if (!mkdir($destinationDirectory) && !is_dir($destinationDirectory)) {
+                throw new \RuntimeException(sprintf('Directory "%s" was not created', $destinationDirectory));
+            }
         }
 
         $finder = new Finder();
         $finder->in($sourceDirectory);
         if (!$this->copyNonPhpFiles) {
             foreach ($this->extensions as $extension) {
-                $finder->name('*.'.$extension);
+                $finder->name('*.' . $extension);
             }
         }
 
         if ($this->excludes) {
             foreach ($this->excludes as $exclude) {
-                $finder->notPath('/^'.preg_quote($exclude, '/').'/');
+                $finder->notPath('/^' . preg_quote($exclude, '/') . '/');
             }
         }
 
         foreach ($finder as $item) {
-            $target = $destinationDirectory.'/'.$item->getRelativePathname();
+            $target = $destinationDirectory . '/' . $item->getRelativePathname();
 
             if ($item->isFile()) {
                 $isPhpFile = $this->isPhpFile($target);
                 if ($isPhpFile || $this->copyNonPhpFiles) {
                     $targetDir = dirname($target);
                     if ($targetDir && !is_dir($targetDir)) {
-                        mkdir($targetDir, 0755, true);
+                        if (!mkdir($targetDir, 0755, true) && !is_dir($targetDir)) {
+                            throw new \RuntimeException(sprintf('Directory "%s" was not created', $targetDir));
+                        }
                     }
                     copy($item->getRealPath(), $target);
 

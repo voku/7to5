@@ -14,25 +14,38 @@ class DefineArrayReplacer extends NodeVisitorAbstract
     /**
      * {@inheritdoc}
      */
-    public function leaveNode(Node $node)
+    public function afterTraverse(array $nodes)
     {
-        if (!$node instanceof Node\Expr\FuncCall) {
-            return;
+        foreach ($nodes as &$node) {
+
+            if (!$node instanceof Node\Stmt\Expression) {
+                continue;
+            }
+
+            if (!$node->expr instanceof Node\Expr\FuncCall) {
+                continue;
+            }
+
+            if (!isset($node->expr->name)) {
+                continue;
+            }
+
+            if ($node->expr->name->parts[0] != 'define') {
+                continue;
+            }
+
+            $nameNode = $node->expr->args[0]->value;
+            $valueNode = $node->expr->args[1]->value;
+
+            if (!$valueNode instanceof Node\Expr\Array_) {
+                continue;
+            }
+
+            $constNode = new Node\Const_($nameNode->value, $valueNode);
+
+            $node = new Node\Stmt\Const_([$constNode]);
         }
 
-        if ($node->name != 'define') {
-            return;
-        }
-
-        $nameNode = $node->args[0]->value;
-        $valueNode = $node->args[1]->value;
-
-        if (!$valueNode instanceof Node\Expr\Array_) {
-            return;
-        }
-
-        $constNode = new Node\Const_($nameNode->value, $valueNode);
-
-        return new Node\Stmt\Const_([$constNode]);
+        return $nodes;
     }
 }

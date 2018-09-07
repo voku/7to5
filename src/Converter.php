@@ -1,10 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Spatie\Php7to5;
 
 use PhpParser\NodeTraverser;
 use PhpParser\ParserFactory;
 use Spatie\Php7to5\Exceptions\InvalidParameter;
+use Spatie\Php7to5\PhpParser\KeepOriginalValueLexer;
+use Spatie\Php7to5\PhpParser\KeepOriginalValuePrinter;
 
 class Converter
 {
@@ -36,34 +40,34 @@ class Converter
     /**
      * @return string
      */
-    public function getPhp5Code()
+    public function getPhp5Code(): string
     {
-        ini_set('xdebug.max_nesting_level', 9000);
+        ini_set('xdebug.max_nesting_level', '9000');
 
-        $parser = (new ParserFactory())->create(ParserFactory::PREFER_PHP7);
+        $parser = (new ParserFactory())->create(ParserFactory::PREFER_PHP7, (new KeepOriginalValueLexer()));
 
         $php7code = file_get_contents($this->pathToPhp7Code);
 
         $php7Statements = $parser->parse($php7code);
 
-        $traverser = $this->getTraverser();
+        $traverser = self::getTraverser();
 
         $php5Statements = $traverser->traverse($php7Statements);
 
-        return (new \PhpParser\PrettyPrinter\Standard())->prettyPrintFile($php5Statements);
+        return (new KeepOriginalValuePrinter())->prettyPrintFile($php5Statements);
     }
 
     /**
      * @return \PhpParser\NodeTraverser
      */
-    public static function getTraverser()
+    public static function getTraverser(): NodeTraverser
     {
         $traverser = new NodeTraverser();
 
-        foreach (glob(__DIR__.'/NodeVisitors/*.php') as $nodeVisitorFile) {
+        foreach (glob(__DIR__ . '/NodeVisitors/*.php') as $nodeVisitorFile) {
             $className = pathinfo($nodeVisitorFile, PATHINFO_FILENAME);
 
-            $fullClassName = '\\Spatie\\Php7to5\\NodeVisitors\\'.$className;
+            $fullClassName = '\\Spatie\\Php7to5\\NodeVisitors\\' . $className;
 
             $traverser->addVisitor(new $fullClassName());
         }
