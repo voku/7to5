@@ -5,7 +5,7 @@ class AnonymousClass0
 {
     public function method($parameter = '', $index = 0)
     {
-        if (($index === 0 && $parameter === '1') || $parameter === '') {
+        if ($index === 0 && $parameter === '1' || $parameter === '') {
             return 'error';
         }
         return isset($parameter) ? $parameter : 'no parameter set';
