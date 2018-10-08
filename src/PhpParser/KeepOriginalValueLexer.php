@@ -11,9 +11,6 @@ class KeepOriginalValueLexer extends Lexer // or Lexer\Emulative
     {
         $tokenId = parent::getNextToken($value, $startAttributes, $endAttributes);
 
-        // DEBUG
-        //var_dump($tokenId, $value);
-
         if ($tokenId == Tokens::T_CONSTANT_ENCAPSED_STRING) {
             $endAttributes['originalValue'] = '_+*-7-to-5-*+_' . $value . '_+*-7-to-5-*+_';
         }

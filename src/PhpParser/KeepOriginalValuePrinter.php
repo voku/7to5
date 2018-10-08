@@ -17,21 +17,12 @@ class KeepOriginalValuePrinter extends Standard
      */
     protected function pStmts(array $nodes, bool $indent = true) : string
     {
-        // DEBUG
-        //var_dump($nodes);
-
         return parent::pStmts($nodes, $indent);
     }
 
     protected function pScalar_String(Node\Scalar\String_ $node)
     {
-        // DEBUG
-        //var_dump($node);
-
         $str = $node->getAttribute('originalValue');
-
-        // DEBUG
-        //var_dump($str);
 
         $str = str_replace(
             ['"_+*-7-to-5-*+_', '_+*-7-to-5-*+_"', '_+*-7-to-5-*+_'],
